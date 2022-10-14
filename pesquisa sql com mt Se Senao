@@ -1,0 +1,83 @@
+        private void Pesquisar(bool ativo, int? codigoGrupo = null, int? codigoSubGrupo = null, string cod = null, string descricao = null, int? qtde = null)
+        {
+            pagina = 1;
+            int.TryParse(txtQtde.Text, out int qtd);
+            txtQtde.Text = qtd.ToString();
+
+            qtd = qtd > 0 ? qtd : 99999;
+            qtd = qtde ?? qtd; //prioridade da qtde que vem dos parametros sobre a dita no campo txt
+
+            string at = ativo ? "and ativo = 1" : "";
+
+            string filtro = "";
+            if (descricao != null)
+                filtro = $"descricao like '%{descricao}%'";
+            else if (cod != null)
+                filtro = $"codigoProduto like '%{cod}%'";
+            else if (codigoGrupo != null && codigoGrupo > 0)
+                filtro = $"codigoGrupoProduto = {codigoGrupo}";
+            else if (codigoSubGrupo != null && codigoSubGrupo > 0)
+                filtro = $"codigoSubGrupo = {codigoSubGrupo}";
+
+            string query = string.Format(@"declare @linhas int;
+set @linhas = {2};
+{3}
+SELECT TOP (@linhas) codigoProduto,codigoGrupoProduto,descricao,unidadeMedida,precoVenda FROM tblProduto 
+where codigoEmpresa = {0} {1} {4}
+",
+            Sessao.EmpresaID,(filtro == "" ? "" : $" and {filtro}"), qtd,
+            (IdRegistroSelecionado == null ? "" : @$"declare @consulta table
+(
+codigoProduto int,
+codigoGrupoProduto int,
+descricao varchar(max),
+unidadeMedida varchar(max),
+precoVenda decimal(15,3)
+)
+insert into @consulta
+SELECT TOP (@linhas) p.codigoProduto,p.codigoGrupoProduto,p.descricao,p.unidadeMedida,i.valor[precoVenda]	
+FROM tblProduto as p left join tblTabelaPrecoItem i on p.codigoProduto = i.CodigoProduto and p.codigoEmpresa = i.codigoEmpresa
+where p.codigoEmpresa = {Sessao.EmpresaID} {(filtro == "" ? "" : $" and p.{ filtro}")}  
+and i.nometabela = '{IdRegistroSelecionado}'
+set @linhas = @linhas - @@rowcount
+
+select * from @consulta union"), (IdRegistroSelecionado == null ? "" : $@"and codigoProduto not in (select codigoProduto from tblTabelaPrecoItem where codigoEmpresa = {Sessao.EmpresaID} 
+and nometabela = '{IdRegistroSelecionado}')") );
+
+            try
+            {
+                produtos = Services.produtoService.BuscarPorQuery(query);
+            }
+            catch (Exception e)
+            { UtilitariosDesktop.MensagemErro(e.Message); return; }
+
+            PreencherDatagrid(produtos, pagina);
+        }
+        private void PreencherDatagrid(List<Produto> produtos, int pagina)
+        {
+            dtgItens.Rows.Clear();
+
+            if (produtos.Count == 0)
+                return;
+
+            int.TryParse(txtItenPorPagina.Text, out int ipp);
+            ipp = ipp > 0 ? ipp : 16;
+            txtItenPorPagina.Text = ipp.ToString();
+
+            int i0 = ipp * (pagina - 1);
+            i0 = i0 > produtos.Count ? produtos.Count - ipp : i0;
+
+            int iF = ipp * pagina;
+            iF = iF > produtos.Count ? produtos.Count - 1 : iF - 1;
+
+            lblContagem.Text = $"Mostrando de {i0 + 1} até {iF + 1} de {produtos.Count} registros";
+
+            for (int i = i0; i <= iF; i++)
+            {
+                Produto produto = produtos[i];
+                if (produto == null)
+                    continue;
+                ProdutoGrupo grupo = grupos.First(x => x.CodigoGrupoProduto == produto.CodigoGrupoProduto);
+                dtgItens.Rows.Add(produto.CodigoProduto, grupo?.Descricao ?? "Não encontrado", produto.Descricao, produto.UnidadeMedida, produto.PrecoVenda);
+            }
+        }
