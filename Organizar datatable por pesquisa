@@ -1,3 +1,4 @@
+Versao DataTable
 public List<object[]> OrganizaDataTable(DataTable dt, int index, string valor)
         {
             List<object[]> itens = new List<object[]>();
@@ -48,5 +49,59 @@ public List<object[]> OrganizaDataTable(DataTable dt, int index, string valor)
                 Invoke(new Action(() => itens.Add(itensTemp[x])));
             foreach (DataRow row in dt.Rows)
                 Invoke(new Action(() => itens.Add(row.ItemArray)));
+            return itens;
+        }
+        
+        
+        
+        
+        
+        //Versao de objeto
+        private List<Produto> OrganizaPesquisa(List<Produto> produtos, string valor = null)
+        {
+            List<Produto> itens = new List<Produto>();
+
+            if (string.IsNullOrWhiteSpace(valor))
+                return produtos;
+
+            valor = valor.Trim();
+            if (produtos.Count <= 1)
+                return produtos;
+
+            List<Produto> itensTemp = new List<Produto>();
+            valor = valor.ToLower();
+            //Pega aqueles que comecam com o valor completamente
+            int i = 1;
+            for (int x = produtos.Count - 1; x >= 0; x--)
+            {
+                Produto produto = produtos[x];
+                if (produto.Descricao.Substring(0, valor.Length).ToLower().Equals(valor.Substring(0, valor.Length)))
+                {
+                    itensTemp.Add(produto);
+                    produtos.Remove(produto);
+                }
+            }
+            for (int x = itensTemp.Count - 1; x >= 0; x--)
+                itens.Add(itensTemp[x]);
+            itensTemp.Clear();
+            //Pega aqueles que comecam com parte do valor, colocando aqueles que tem mais dele na frente
+            while (i < valor.Length)
+            {
+                for (int x = produtos.Count - 1; x >= 0; x--)
+                {
+                    Produto produto = produtos[x];
+                    if (produto.Descricao.ToString().Substring(0, valor.Length - i).ToLower().Equals(valor.Substring(0, valor.Length - i)))
+                    {
+                        itensTemp.Add(produto);
+                        produtos.Remove(produto);
+                    }
+                }
+                i++;
+            }
+            for (int x = itensTemp.Count - 1; x >= 0; x--)
+                itens.Add(itensTemp[x]);
+            //Joga tudo que sobra na lista
+            foreach (var produto in produtos)
+                itens.Add(produto);
             return itens;
         }
