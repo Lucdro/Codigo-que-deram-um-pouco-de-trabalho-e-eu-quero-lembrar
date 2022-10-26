@@ -45,6 +45,8 @@
             for (int x = itensTemp.Count - 1; x >= 0; x--)
                 itens.Add(itensTemp[x]);
             //Joga tudo que sobra na lista
+            Func<T, string> keyselector = new Func<T, string>(x => prop.GetValue(x).ToString());
+            pesquisa = pesquisa.OrderBy(keyselector).ToList();
             foreach (var temp in pesquisa)
                 itens.Add(temp);
             return itens;
