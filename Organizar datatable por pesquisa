@@ -14,20 +14,8 @@
             var expr = (MemberExpression)propriedade.Body;
             var prop = (PropertyInfo)expr.Member;
             valor = valor.ToLower();
-            //Pega aqueles que comecam com o valor completamente
-            int i = 1;
-            for (int x = pesquisa.Count - 1; x >= 0; x--)
-            {
-                T temp = pesquisa[x];
-                if (prop.GetValue(temp).ToString().Substring(0, valor.Length).ToLower().Equals(valor.Substring(0, valor.Length)))
-                {
-                    itensTemp.Add(temp);
-                    pesquisa.Remove(temp);
-                }
-            }
-            for (int x = itensTemp.Count - 1; x >= 0; x--)
-                itens.Add(itensTemp[x]);
-            itensTemp.Clear();
+            
+            int i = 0;
             //Pega aqueles que comecam com parte do valor, colocando aqueles que tem mais dele na frente
             while (i < valor.Length)
             {
