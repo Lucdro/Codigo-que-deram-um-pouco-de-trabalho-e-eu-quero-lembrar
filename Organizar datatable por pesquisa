@@ -87,6 +87,7 @@ Versao2
 
 
 Versao DataTable
+versao1
 public List<object[]> OrganizaDataTable(DataTable dt, int index, string valor)
         {
             List<object[]> itens = new List<object[]>();
@@ -137,6 +138,88 @@ public List<object[]> OrganizaDataTable(DataTable dt, int index, string valor)
                 Invoke(new Action(() => itens.Add(itensTemp[x])));
             foreach (DataRow row in dt.Rows)
                 Invoke(new Action(() => itens.Add(row.ItemArray)));
+            return itens;
+        }
+        
+        
+   versao 2
+        public List<object[]> OrganizaDataTable(DataTable dt, int indexCampo, string valor)
+        {
+            List<object[]> itens = new List<object[]>();
+
+            if (string.IsNullOrWhiteSpace(valor))
+            {
+                foreach (DataRow row in dt.Rows)
+                    itens.Add(row.ItemArray);
+                return itens;
+            }
+            valor = valor.Trim();
+            if (dt.Rows.Count == 0)
+                return itens;
+            else if (dt.Rows.Count == 1)
+            {
+                itens.Add(dt.Rows[0].ItemArray);
+                return itens;
+            }
+            List<object[]> itensTemp = new List<object[]>();
+            //Insere na lista temp primeiro aqueles menos semelhantes
+            int i = valor.Length - 1;
+            while (i >= 0)
+            {
+                for (int x = dt.Rows.Count - 1; x >= 0; x--)
+                {
+                    DataRow row = dt.Rows[x];
+                    if (row.ItemArray[indexCampo].ToString().Length < valor.Length - i)
+                        continue;
+                    if (!row.ItemArray[indexCampo].ToString().Substring(0, valor.Length-i).Equals(valor.Substring(0, valor.Length-i)))
+                    {
+                        Invoke(new Action(() => itensTemp.Add(row.ItemArray)));
+                        dt.Rows.Remove(row);
+                    }
+                }
+                i--;
+            }
+            //Itens que comecam com exatamente oq foi pesquisado
+            for (int x = 0; x < dt.Rows.Count; x++)
+                Invoke(new Action(() => itens.Add(dt.Rows[x].ItemArray)));
+            //inverter a ordem dos itens
+            for (int x = itensTemp.Count-1;x >= 0;x--)
+                Invoke(new Action(() => itens.Add(itensTemp[x])));
+            #region logicaAntiga
+            ////Pega aqueles que comecam com o valor completamente, remove da datatable e coloca na lista nova
+            //int i = 1;
+            //for (int x = dt.Rows.Count - 1; x >= 0; x--)
+            //{
+            //    DataRow row = dt.Rows[x];
+            //    if (row.ItemArray[indexCampo].ToString().Substring(0, valor.Length).Equals(valor.Substring(0, valor.Length)))
+            //    {
+            //        Invoke(new Action(() => itensTemp.Add(row.ItemArray)));
+            //        dt.Rows.Remove(row);
+            //    }
+            //}
+            //for (int x = itensTemp.Count - 1; x >= 0; x--)
+            //    Invoke(new Action(() => itens.Add(itensTemp[x])));
+            //Invoke(new Action(() => itensTemp.Clear()));
+            ////Pega aqueles que comecam com parte do valor, colocando aqueles que tem mais dele na frente, remove da datatable e coloca na lista nova
+            //while (i < valor.Length)
+            //{
+            //    for (int x = dt.Rows.Count - 1; x >= 0; x--)
+            //    {
+            //        DataRow row = dt.Rows[x];
+            //        if (row.ItemArray[indexCampo].ToString().Substring(0, valor.Length - i).Equals(valor.Substring(0, valor.Length - i)))
+            //        {
+            //            Invoke(new Action(() => itensTemp.Add(row.ItemArray)));
+            //            dt.Rows.Remove(row);
+            //        }
+            //    }
+            //    i++;
+            //}
+            //for (int x = itensTemp.Count - 1; x >= 0; x--)
+            //    Invoke(new Action(() => itens.Add(itensTemp[x])));
+            ////Joga tudo que sobra na lista
+            //foreach (DataRow row in dt.Rows)
+            //    Invoke(new Action(() => itens.Add(row.ItemArray)));
+            #endregion
             return itens;
         }
         
