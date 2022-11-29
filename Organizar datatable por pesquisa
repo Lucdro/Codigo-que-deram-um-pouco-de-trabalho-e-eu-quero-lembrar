@@ -24,6 +24,8 @@
                 for (int x = pesquisa.Count - 1; x >= 0; x--)
                 {
                     T temp = pesquisa[x];
+                    if (prop.GetValue(temp).ToString().Length < valor.Length - i)
+                        continue;
                     if (prop.GetValue(temp).ToString().Substring(0, valor.Length - i).ToLower().Equals(valor.Substring(0, valor.Length - i)))
                     {
                         itensTemp.Add(temp);
@@ -65,6 +67,8 @@ Versao2
                 for (int x = pesquisa.Count - 1; x >= 0; x--)
                 {
                     T temp = pesquisa[x];
+                    if (prop.GetValue(temp).ToString().Length < valor.Length - i)
+                        continue;
                     if (!prop.GetValue(temp).ToString().Substring(0, valor.Length - i).ToLower().Equals(valor.Substring(0, valor.Length - i)))
                     {
                         itensTemp.Add(temp);
