@@ -1,4 +1,6 @@
 //Versao de objeto generico
+
+//versao1
         public static List<T> OrganizaPesquisa<T>(List<T> pesquisa,Expression<Func<T,string>> propriedade, string valor = null)
         {
             List<T> itens = new List<T>();
@@ -39,6 +41,46 @@
                 itens.Add(temp);
             return itens;
         }
+Versao2 
+        public static List<T> OrganizaPesquisa<T>(List<T> pesquisa, Expression<Func<T, string>> propriedade, string valor = null)
+        {
+            List<T> itens = new List<T>();
+
+            if (string.IsNullOrWhiteSpace(valor))
+                return pesquisa;
+
+            valor = valor.Trim();
+            if (pesquisa.Count <= 1)
+                return pesquisa;
+
+            List<T> itensTemp = new List<T>();
+            var expr = (MemberExpression)propriedade.Body;
+            var prop = (PropertyInfo)expr.Member;
+            valor = valor.ToLower();
+
+            //Insere na lista temp primeiro aqueles menos semelhantes
+            int i = valor.Length - 1;
+            while (i >= 0)
+            {
+                for (int x = pesquisa.Count - 1; x >= 0; x--)
+                {
+                    T temp = pesquisa[x];
+                    if (!prop.GetValue(temp).ToString().Substring(0, valor.Length - i).ToLower().Equals(valor.Substring(0, valor.Length - i)))
+                    {
+                        itensTemp.Add(temp);
+                        pesquisa.Remove(temp);
+                    }
+                }
+                i--;
+            }
+            //inverter a ordem dos itens
+            for (int x = itensTemp.Count - 1; x >= 0; x--)
+                itens.Add(itensTemp[x]);
+            return itens;
+        }
+
+
+
 
 Versao DataTable
 public List<object[]> OrganizaDataTable(DataTable dt, int index, string valor)
