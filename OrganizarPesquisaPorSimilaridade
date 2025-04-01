@@ -1,0 +1,43 @@
+public static List<T> OrganizarPesquisaPorSimilaridade<T>(List<T> pesquisa, Expression<Func<T, string>> propriedade, string valor, int indexComecoValor = -1, int lengthValor = -1) where T : class
+{
+    if (pesquisa.Count <= 1)
+        return pesquisa;
+    Func<T, string> compiledProperty = propriedade.Compile();
+    if (string.IsNullOrWhiteSpace(valor))
+        return pesquisa.OrderBy(compiledProperty).ToList();
+
+    valor = valor.Trim();
+    valor = valor.ToLower();
+    List<T> organizados = new List<T>();
+
+    indexComecoValor = indexComecoValor > 0 ? indexComecoValor : 0;
+    lengthValor = lengthValor > 0 ? lengthValor : valor.Length;
+    if (indexComecoValor >= valor.Length)
+        throw new ArgumentOutOfRangeException(nameof(indexComecoValor));
+    if (indexComecoValor + lengthValor > valor.Length)
+        throw new ArgumentOutOfRangeException(nameof(lengthValor));
+
+    for (int l = lengthValor; l > 0; l--)
+    {
+        List<T> tempList = new List<T>();
+        for (int p = pesquisa.Count - 1; p >= 0; p--)
+        {
+            T temp = pesquisa[p];
+            if (compiledProperty(temp).Length < indexComecoValor + l)
+                continue;
+            if (compiledProperty(temp)
+                .AsSpan(indexComecoValor, l)
+                .Equals(valor.AsSpan(indexComecoValor, l), StringComparison.OrdinalIgnoreCase))
+            {
+                tempList.Add(temp);
+                pesquisa.Remove(temp);
+            }
+        }
+        for (int t = tempList.Count - 1; t >= 0; t--)
+            organizados.Add(tempList[t]);
+    }
+    foreach (T item in pesquisa)
+        organizados.Add(item);
+
+    return organizados;
+}
